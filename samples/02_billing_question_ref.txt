@@ -1,0 +1,11 @@
+ caller: Orthopedic patient
+reason: wants itemised copy of a bill(could not understand the orginal one)
+request: itemised bill required.
+urgency: not mentioned
+action needed: requested copy to be sent from the concerned department
+               details given:
+               name:"*******"
+               slot date and time:"*******"
+               phone no:"**********"
+mood:calm and responsive
+required action:send request to Billing department

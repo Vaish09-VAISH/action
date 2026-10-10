@@ -1,0 +1,15 @@
+[00:00] AGENT: Good morning, thank you for calling Riverbend Medical Center front desk, this is Lisa speaking.  
+[00:07] PATIENT: Hi Lisa, this is John Doe. I hope you’re doing well today.  
+[00:13] AGENT: I’m doing fine, thank you, John. How can I help you today?  
+[00:19] PATIENT: I received a bill last week—reference number REF123456—from my visit on September 15th, 2026, and I’m not quite sure what the charges are for.  
+[00:27] AGENT: Let me pull that up for you. One moment, please.  
+[00:33] PATIENT: Sure, thank you. I was hoping I could get an itemised copy of that bill, just to see each charge listed.  
+[00:41] AGENT: Absolutely, I can arrange that. May I have the email address you’d like it sent to?  
+[00:48] PATIENT: Yes, it’s john.doe@email.com. And again, I’d really appreciate an itemised copy of the bill.  
+[00:55] AGENT: Got it, John. I’m just loading your account—sorry to interrupt, I need to place you on a brief hold while I retrieve the details.  
+[01:03] PATIENT: No problem, I’ll hold. I’m just looking for that itemised copy.  
+[01:09] AGENT: Thank you for holding. I have the breakdown here: Room charge $600.00, Lab tests $250.75, Medications $186.25, Facility fee $200.00, and a Miscellaneous service fee $0.50, totaling $1,237.50.  
+[01:22] PATIENT: I see. Could you explain the facility fee? I don’t recall that being mentioned before.  
+[01:29] AGENT: The facility fee covers the use of the hospital’s equipment and overhead for the day of service. I can include a detailed explanation in the itemised PDF I’ll email you.  
+[01:38] PATIENT: That would be great, thank you. I’ll look out for the email with the itemised copy. Have a nice day!  
+[01:45] AGENT: You’re welcome, John. The email should arrive within the next few minutes. Have a wonderful day!

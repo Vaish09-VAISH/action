@@ -1,0 +1,18 @@
+[09:02] AGENT: Good morning, Riverbend Medical Center front desk, Emily speaking. How can I help you today?  
+[09:07] PATIENT: Hi Emily, this is John Miller. I'm calling about a bill I got for my recent procedure.  
+[09:12] AGENT: Hi John, I'm sorry to hear that. Let me pull up your record. Can you confirm the date of service?  
+[09:17] PATIENT: Sure, it was July 12, 2023, the knee arthroscopy.  
+[09:22] AGENT: Got it. I see a claim with HealthFirst Insurance, reference HF-2023-04567. What seems to be the issue?  
+[09:27] PATIENT: Well, they denied the claim. I got a letter saying they won't cover it.  
+[09:32] AGENT: I'm sorry to hear that. Did the denial notice give a reason?  
+[09:37] PATIENT: It just says "coverage not authorized". I called them, they said the same thing.  
+[09:42] AGENT: (typing) Let me check the notes here… Hold on a second. *click* … Okay.  
+[09:44] PATIENT: Sorry, could you repeat that? I didn't catch what you said.  
+[09:49] AGENT: No problem. I was just confirming your claim number is HF-2023-04567 and the amount is $2,450.00.  
+[09:54] PATIENT: Right, that's right. I told them they denied it, I told them they denied it.  
+[10:00] AGENT: I understand. Are you looking to appeal the decision, or would you like us to provide any documentation?  
+[10:05] PATIENT: I'm not sure. I just wanted to let you know what happened.  
+[10:10] AGENT: Okay, I can note that in your file. Would you like us to send a copy of the bill to HealthFirst again?  
+[10:15] PATIENT: Maybe. I guess I need to figure that out. I haven't decided yet.  
+[10:20] AGENT: No problem, John. I'll flag this for our billing department and they can follow up with you if needed.  
+[10:25] PATIENT: Thanks, Emily. I appreciate it.

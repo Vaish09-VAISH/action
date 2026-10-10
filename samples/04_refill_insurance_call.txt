@@ -1,0 +1,18 @@
+[00:00] PATIENT: Hi, this is Linda Martinez. I’m calling about a refill for my blood pressure medication.  
+[00:05] AGENT: Hello Linda, this is James at the front desk. I’m doing well, thank you—how are you today?  
+[00:09] PATIENT: I’m okay, just a bit confused because my insurance changed last month, so I’m not sure if it’ll still be covered.  
+[00:14] AGENT: I see. Let me pull up your chart. Can you confirm your date of birth for me, please?  
+[00:18] PATIENT: Sure, it’s March 22, 1975.  
+[00:22] AGENT: Thanks. And the prescription you need is for Lisinopril, Rx‑84219, right?  
+[00:27] PATIENT: Yes, that’s the one—Lisinopril, Rx‑84219. I need a 30‑day refill, the last one was on September 10.  
+[00:33] AGENT: Hold on a moment while I check the insurance details…  
+[00:36] PATIENT: Actually, could you tell me what my new insurance is listed as? I think it’s Sunrise Medicare, but I’m not 100% sure.  
+[00:41] AGENT: Let me see… Okay, I have it here as Sunrise Medicare, effective April 15. Does that sound right?  
+[00:46] PATIENT: Yes, that’s right—Sunrise Medicare. I just want to make sure the refill will be covered under that plan.  
+[00:51] AGENT: I’m checking the formulary now… It looks like Lisinopril 10 mg is covered, but there’s a co‑pay of $12.34 under Sunrise Medicare.  
+[00:57] PATIENT: So, just to repeat, the co‑pay will be $12.34 and it’s covered? I want to be sure I’m not missing anything.  
+[01:02] AGENT: Correct, it’s covered and the co‑pay is $12.34. I’ll go ahead and send the refill to your pharmacy, Greenfield Pharmacy, prescription number 578921.  
+[01:08] PATIENT: Great, thank you. Can you also email me a copy of the prescription details?  
+[01:12] AGENT: Absolutely, I’ll email it to the address we have on file—lmartinez@email.com. Anything else I can help you with today?  
+[01:17] PATIENT: No, that’s everything. Thanks for your help, James.  
+[01:20] AGENT: You’re welcome, Linda. Have a good day!

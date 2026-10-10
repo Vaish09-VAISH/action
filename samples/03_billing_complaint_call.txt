@@ -1,0 +1,14 @@
+[00:00] AGENT: Good morning, thank you for calling Riverbend Medical Center, this is Jenna at the front desk, how may I help you?  
+[00:05] PATIENT: This is Mark Thompson. I'm really upset— I was billed twice for my appointment on March 3rd, and I want my money back right now.  
+[00:12] AGENT: I'm sorry to hear that, Mr. Thompson. Let me pull up your account. Can you confirm your date of birth, please?  
+[00:18] PATIENT: It's July 14, 1978. And I already told you I was charged twice— $250 each— that's $500 for one visit!  
+[00:25] AGENT: Thank you. I see the two charges here, reference #A102938 and #A102939, both dated 03/03/2024 for $250. Is that correct?  
+[00:33] PATIENT: Yes, exactly. I shouldn't have to pay $500 for a single check‑up. I need a refund now.  
+[00:40] AGENT: I understand your frustration. Let me check why the duplicate charge occurred. One moment, please.  
+[00:45] PATIENT: (interrupting) Look, I don't have time to wait. I need this fixed today.  
+[00:49] AGENT: I get that. I’m still looking… It appears the system processed the payment twice due to a network glitch. I can initiate a reversal for the second charge.  
+[00:58] PATIENT: So you’re saying you’ll just... you’ll refund the $250? I want it now, not later.  
+[01:05] AGENT: Yes, we’ll issue a refund for the duplicate $250. It usually takes 3–5 business days to appear on your card, but I can flag it as urgent.  
+[01:13] PATIENT: Three to five days? That’s not good enough. I need it today. I’m not paying for a mistake.  
+[01:20] AGENT: I understand. While I can’t push the money through instantly, I can also send you a courtesy credit of $25 for the inconvenience, and we’ll follow up with the refund as soon as possible.  
+[01:30] PATIENT: Fine. Send the $25 credit and make sure the $250 refund is processed today. I’ll be calling back if it’s not.

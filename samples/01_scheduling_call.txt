@@ -1,0 +1,17 @@
+[00:00] AGENT: Good morning, thank you for calling Riverbend Medical Center, this is Jenna at the front desk. How are you today?  
+[00:07] PATIENT: Oh, hello dear, I'm Margaret Lawson. I'm doing okay, thank you—it's a lovely morning. I'm calling about my appointment next week.  
+[00:15] AGENT: Hi Margaret, let me pull up your record. Could you confirm your date of birth, please?  
+[00:20] PATIENT: Yes, it's June 12th, 1948.  
+[00:25] AGENT: Thank you. I see you have a cardiology follow‑up scheduled for Tuesday, March 12th at 10:30 am with Dr. Patel.  
+[00:32] PATIENT: Sorry to interrupt, actually it's March 12th, not the 13th—yes, that's right, but my son can't drive me that day anymore.  
+[00:40] AGENT: I'm sorry to hear that. Would you like to reschedule for a later date?  
+[00:45] PATIENT: Yes, I'd like to move it, I need a new slot, because my son can't get me there.  
+[00:52] AGENT: Absolutely, we have two openings: Thursday, March 21st at 9:00 am, or Monday, March 25th at 2:15 pm. Which would work better?  
+[01:02] PATIENT: Hmm, let me think… (pause) The Thursday one sounds good. Yes, Thursday, March 21st at 9:00 am.  
+[01:13] AGENT: Great, I’ll put you down for March 21st at nine‑oh‑zero. May I confirm the reference number for this appointment? It’s 453‑A7.  
+[01:23] PATIENT: 453‑A7, got it. Can you repeat that back, please? I want to make sure I write it down correctly.  
+[01:31] AGENT: Sure thing, it's 453‑A7, March 21st, 9 am, with Dr. Patel.  
+[01:38] PATIENT: Thank you. And just to be clear, that's a new appointment, right? Not the same as the old one.  
+[01:45] AGENT: Yes, that's a brand‑new slot. The original March 12th appointment has been cancelled.  
+[01:52] PATIENT: Okay, perfect. Oh—sorry, could you also tell me the parking code again? I think I missed it.  
+[02:00] AGENT: No problem, the parking garage code is PARK‑22. You can enter that at the gate. Have a nice day!
