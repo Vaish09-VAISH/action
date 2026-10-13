@@ -30,6 +30,7 @@ def mmss(seconds):
     return f"{m:02d}:{s:02d}"
 
 
+<<<<<<< HEAD
 def _format_transcript(resp):
     utterances = getattr(resp.results, "utterances", None)
     if not utterances:
@@ -73,6 +74,8 @@ def transcribe_bytes(audio_bytes, content_type):
     return _format_transcript(response)
 
 
+=======
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 def transcribe(audio_path):
     """Return a speaker-labelled transcript file. Cached after the first run."""
     out = TRANSCRIPT_DIR / f"{audio_path.stem}.txt"
@@ -93,9 +96,27 @@ def transcribe(audio_path):
             smart_format=True,
         )
 
+<<<<<<< HEAD
     transcript = _format_transcript(resp)
     out.write_text(transcript, encoding="utf-8")
     print(f"  transcribed {len(resp.results.utterances)} turns -> {out.name}")
+=======
+    utterances = getattr(resp.results, "utterances", None)
+    if not utterances:
+        raise SystemExit("Deepgram returned no utterances - check the error printed above.")
+
+    lines = []
+    for u in utterances:
+        speakers = [w.speaker for w in u.words if getattr(w, "speaker", None) is not None]
+        name = "SPEAKER"
+        if speakers:
+            top = max(set(speakers), key=speakers.count)     # majority vote per sentence
+            name = SPEAKER_NAMES.get(top, f"SPEAKER {top}")
+        lines.append(f"[{mmss(u.start)}] {name}: {u.transcript.strip()}")
+
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"  transcribed {len(utterances)} turns -> {out.name}")
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
     return out
 
 

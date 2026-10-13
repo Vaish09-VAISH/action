@@ -1,7 +1,10 @@
 import json, logging, re, time
 from enum import Enum
 from pathlib import Path
+<<<<<<< HEAD
 from typing import Any
+=======
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 
 from dotenv import load_dotenv
 
@@ -34,6 +37,7 @@ CALL_CARD_SCHEMA = {
                     "enum": ["routine", "soon", "urgent"]},
         "emergency_flag": {"type": "boolean"},
         "summary": {"type": "string"},
+<<<<<<< HEAD
         "evidence": {
             "type": "object",
             "properties": {
@@ -51,6 +55,8 @@ CALL_CARD_SCHEMA = {
             "required": ["summary", "sentiment", "urgency", "emergency"],
             "additionalProperties": False,
         },
+=======
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
         "action_items": {
             "type": "array",
             "items": {
@@ -72,8 +78,12 @@ CALL_CARD_SCHEMA = {
         },
     },
     "required": ["caller", "reason", "request", "call_type", "sentiment",
+<<<<<<< HEAD
                  "urgency", "emergency_flag", "summary", "evidence",
                  "action_items"],
+=======
+                 "urgency", "emergency_flag", "summary", "action_items"],
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
     "additionalProperties": False,
 }
 
@@ -100,11 +110,14 @@ RULES - follow every one:
    character for character from the transcript. Do not fix grammar, do not
    paraphrase. If a sentence is split across two transcript lines, you may
    join it - the words must still be continuous as spoken.
+<<<<<<< HEAD
    Copy the matching [MM:SS] prefix into its "timestamp".
 2a. Add "evidence" for summary, sentiment, urgency, and emergency. Each
    entry has "quote" (an exact, short supporting quote from the transcript)
    and "timestamp" (the [MM:SS] prefix from the line containing that quote).
    If you cannot find supporting words, use quote "none" and timestamp "".
+=======
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 3. NEVER invent a due date. Put a date in "due_hint" ONLY if one was
    actually spoken. Otherwise use an empty string "".
 4. If the caller never asked for anything, return "action_items": [],
@@ -251,6 +264,7 @@ def check_shape(raw: dict) -> dict:
         raise ValueError(f"missing fields: {sorted(missing)}")
     if not isinstance(raw["action_items"], list):
         raise ValueError("action_items must be a list")
+<<<<<<< HEAD
     evidence = raw.setdefault("evidence", {})
     if not isinstance(evidence, dict):
         raise ValueError("evidence must be an object")
@@ -260,6 +274,8 @@ def check_shape(raw: dict) -> dict:
             raise ValueError(f"evidence.{field} must be an object")
         item.setdefault("timestamp", "")
         item.setdefault("quote", "")
+=======
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
     for item in raw["action_items"]:
         for k in ("action_needed", "action_required", "owner_team", "quote"):
             if not item.get(k):
@@ -269,6 +285,7 @@ def check_shape(raw: dict) -> dict:
     return raw
 
 
+<<<<<<< HEAD
 _TRANSCRIPT_TIMESTAMP = re.compile(r"^\[(\d{1,2}):(\d{2})\]")
 
 
@@ -313,6 +330,8 @@ def _attach_audio_timestamps(card: dict, transcript: str) -> None:
         item["timestamp"] = timestamp if timestamp is not None else 0.0
 
 
+=======
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 
 # ------------------------- 4. the quote check - catches invented words
 def verify_quote(quote: str, transcript: str) -> bool:
@@ -357,6 +376,7 @@ def score_and_route(card: dict, transcript: str):
 
 
 # --------------------------------- 6. one function that never crashes
+<<<<<<< HEAD
 def process_transcript(transcript: str, source_name: str = "live-call") -> dict:
     transcript = transcript.strip()
     if len(transcript) < 50:
@@ -382,6 +402,8 @@ def process_transcript(transcript: str, source_name: str = "live-call") -> dict:
     return {"status": "ok", "card": card, "routed": routed, "review": review}
 
 
+=======
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 def process(path: str) -> dict:
     try:
         transcript = load_transcript(path)
@@ -390,7 +412,24 @@ def process(path: str) -> dict:
         FAILED.append({"file": str(path), "reason": Reason.BAD_FILE.value,
                        "detail": str(e)})
         return {"status": "skipped", "reason": Reason.BAD_FILE.value}
+<<<<<<< HEAD
     return process_transcript(transcript, Path(path).name)
+=======
+
+    try:
+        card = check_shape(call_model(transcript))
+    except Exception as e:
+        log.error("no card for %s: %s", path, e)
+        FAILED.append({"file": str(path), "reason": Reason.BAD_SHAPE.value,
+                       "detail": str(e)})
+        return {"status": "skipped", "reason": Reason.BAD_SHAPE.value}
+
+    routed, review = score_and_route(card, transcript)
+    FAILED.extend([{"file": str(path), **r} for r in review])
+    log.info("%s -> %d sent, %d to a human",
+             Path(path).name, len(routed), len(review))
+    return {"status": "ok", "card": card, "routed": routed, "review": review}
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 
 
 # --------------------------------------------- standalone: print the card

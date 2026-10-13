@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from pathlib import Path
 from urllib.parse import quote
 
@@ -6,12 +7,19 @@ import streamlit as st
 from audio_evidence_component import AUDIO_EVIDENCE_COMPONENT
 from audio_player_component import AUDIO_PLAYER_COMPONENT
 from live_recorder_component import LIVE_STREAM_COMPONENT
+=======
+import streamlit as st
+from pathlib import Path
+import pipeline
+from run_audio import transcribe
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 
 st.set_page_config(
     page_title="AI Call Summary",
     layout="wide"
 )
 
+<<<<<<< HEAD
 
 def _handle_audio_jump() -> None:
     component_state = st.session_state["audio-evidence"]
@@ -24,6 +32,13 @@ def _handle_audio_jump() -> None:
 st.title("AI Healthcare Call Summary")
 
 AUDIO_DIR = Path(__file__).resolve().parent / "audio" / "audio"
+=======
+st.title("AI Healthcare Call Summary")
+from pathlib import Path
+
+AUDIO_DIR = Path("audio/audio")
+
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 audio_files = sorted(AUDIO_DIR.glob("*.mp3"))
 
 if not audio_files:
@@ -36,6 +51,7 @@ selected_audio = st.selectbox(
     format_func=lambda path: path.name
 )
 
+<<<<<<< HEAD
 st.subheader("Live Audio Stream")
 st.caption(
     "Record from your microphone and send 5-second chunks to this app. "
@@ -124,10 +140,35 @@ with right:
     st.header("🤖 AI Summary")
     if live_summary_error:
         st.error(live_summary_error)
+=======
+audio_path = selected_audio
+
+left, right = st.columns(2)
+
+# ---------------- LEFT: AUDIO ----------------
+with left:
+    st.header("🎙️ Call Audio")
+
+    if audio_path.exists():
+        with open(audio_path, "rb") as audio_file:
+            audio_bytes = audio_file.read()
+
+        st.audio(audio_bytes, format="audio/mpeg")
+
+        st.write(f"**File:** {audio_path.name}")
+    else:
+        st.error(f"Audio file not found: {audio_path}")
+
+
+# ---------------- RIGHT: AI RESULT ----------------
+with right:
+    st.header("🤖 AI Summary")
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 
     if st.button("Generate Summary", key="generate_summary"):
         with st.spinner("Transcribing and generating summary..."):
             try:
+<<<<<<< HEAD
                 env_path = Path(__file__).resolve().with_name(".env")
                 if not env_path.is_file():
                     raise FileNotFoundError(
@@ -139,10 +180,14 @@ with right:
                 from run_audio import transcribe
 
                 transcript_path = transcribe(selected_audio)
+=======
+                transcript_path = transcribe(audio_path)
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
                 result = pipeline.process(str(transcript_path))
 
                 if result.get("status") != "ok":
                     st.error(
+<<<<<<< HEAD
                         "Could not build a card: "
                         f"{result.get('reason', 'Unknown error')}"
                     )
@@ -178,3 +223,64 @@ with right:
             },
             on_jump_change=_handle_audio_jump,
         )
+=======
+                        f"Could not build a card: "
+                        f"{result.get('reason', 'Unknown error')}"
+                    )
+                else:
+                    card = result["card"]
+
+                    st.subheader("Summary")
+                    st.write(card.get("summary", "Not available"))
+
+                    st.divider()
+
+                    st.write(
+                        f"**Call type:** "
+                        f"{card.get('call_type', 'Not available')}"
+                    )
+                    st.write(
+                        f"**Mood:** "
+                        f"{card.get('sentiment', 'Not available')}"
+                    )
+                    st.write(
+                        f"**Urgency:** "
+                        f"{card.get('urgency', 'Not available')}"
+                    )
+                    st.write(
+                        f"**Emergency:** "
+                        f"{card.get('emergency_flag', 'Not available')}"
+                    )
+
+                    st.divider()
+                    st.subheader("Action Items")
+
+                    routed = result.get("routed", [])
+                    if routed:
+                        for item in routed:
+                            st.write(
+                                f"**SEND:** "
+                                f"{item.get('action', 'Not available')}"
+                            )
+                            st.write(
+                                f"Owner: "
+                                f"{item.get('owner_team', 'Not available')}"
+                            )
+                    else:
+                        st.write("None")
+
+                    st.divider()
+                    st.subheader("Needs a Person")
+
+                    review = result.get("review", [])
+                    if review:
+                        for item in review:
+                            st.warning(
+                                f"{item.get('action', 'Review required')} — "
+                                f"{item.get('reason', '')}"
+                            )
+                    else:
+                        st.write("None")
+            except Exception as e:
+                st.error(f"Summary generation failed: {e}")
+>>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
