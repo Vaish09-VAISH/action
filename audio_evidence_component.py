@@ -12,9 +12,25 @@ _EVIDENCE_HTML = """
 _EVIDENCE_CSS = """
 .audio-proof-cards {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
   color: var(--st-text-color, #111827);
   font-family: var(--st-font, sans-serif);
+}
+#proof-card-fields,
+#proof-action-items {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+#proof-card-fields,
+#proof-action-items { grid-column: 1 / -1; }
+#proof-action-items > .proof-heading { grid-column: 1 / -1; }
+#proof-action-items > .proof-actions-list { grid-column: 1 / -1; }
+.proof-actions-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 .proof-card {
   border: 1px solid var(--st-border-color, #d1d5db);
@@ -69,6 +85,60 @@ _EVIDENCE_CSS = """
   color: var(--st-secondary-text-color, #6b7280);
   font-size: 0.9rem;
 }
+.confidence-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.55rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+.confidence-badge.verified {
+  color: #166534;
+  background: #dcfce7;
+}
+.confidence-badge.needs-review {
+  color: #92400e;
+  background: #fef3c7;
+}
+.proof-review-queue {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid #f59e0b99;
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+  background: #f59e0b14;
+}
+.proof-review-queue .proof-heading {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.proof-review-item { border-color: #f59e0b88; }
+.proof-review-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+.proof-review-controls button {
+  border: 1px solid var(--st-border-color, #d1d5db);
+  border-radius: 0.45rem;
+  padding: 0.35rem 0.65rem;
+  background: transparent;
+  color: var(--st-text-color, #111827);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+.proof-review-controls button:hover { background: #f59e0b33; }
+.proof-review-controls button:active { transform: scale(0.97); }
+@media (max-width: 700px) {
+  #proof-card-fields,
+  #proof-action-items,
+  .proof-actions-list { grid-template-columns: minmax(0, 1fr); }
+}
 """
 
 _EVIDENCE_JS = """
@@ -101,6 +171,7 @@ export default function (component) {
   instance.activeId = data.activeId || null;
   instance.fields.replaceChildren();
   instance.actions.replaceChildren();
+  instance.actions.classList.add("proof-actions-list");
 
   for (const [key, label] of FIELDS) {
     const value = key === "summary"
@@ -120,44 +191,126 @@ export default function (component) {
     instance.fields.append(card);
   }
 
-  const actionHeading = document.createElement("h4");
-  actionHeading.className = "proof-heading";
-  actionHeading.textContent = "Action Items";
-  instance.actions.append(actionHeading);
+  const items = (data.card?.action_items || []).map((item, index) => {
+    const hasConfidence = typeof item.confidence === "number"
+      && Number.isFinite(item.confidence);
+    const hasQuote = typeof item.quote === "string" && item.quote.trim().length > 0;
+    const useLegacyFallback = item.traceability_scored !== true
+      && (!hasConfidence || !hasQuote);
+    const confidence = useLegacyFallback
+      ? 0.8
+      : hasConfidence
+        ? Math.min(1, Math.max(0, item.confidence))
+        : 0.8;
+    const status = item.status === "dismissed"
+      ? "dismissed"
+      : item.human_approved || useLegacyFallback
+        ? "verified"
+        : item.status || (confidence >= 0.7 ? "verified" : "needs_review");
+    return { ...item, confidence, status, index };
+  }).filter(item => item.status !== "dismissed");
+  const verifiedItems = items.filter(
+    item => item.status === "verified" || item.confidence >= 0.7,
+  );
+  const reviewItems = items.filter(
+    item => item.status === "needs_review" && item.confidence < 0.7,
+  );
 
-  const items = data.card?.action_items || [];
+  appendActionSection(
+    instance.actions,
+    "Verified Action Items (Automated)",
+    verifiedItems,
+    false,
+    instance,
+  );
+
+  const reviewQueue = document.createElement("section");
+  reviewQueue.className = "proof-review-queue";
+  const reviewHeading = document.createElement("h4");
+  reviewHeading.className = "proof-heading";
+  reviewHeading.textContent = "Human-in-the-Loop Review Queue (Safety Net)";
+  reviewQueue.append(reviewHeading);
+  if (reviewItems.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "proof-empty";
+    empty.textContent = "No action items need review.";
+    reviewQueue.append(empty);
+  }
+  reviewItems.forEach(item => {
+    reviewQueue.append(createActionCard(item, true, instance));
+  });
+  instance.actions.append(reviewQueue);
+}
+
+function appendActionSection(parent, title, items, needsReview, instance) {
+  const heading = document.createElement("h4");
+  heading.className = "proof-heading";
+  heading.textContent = title;
+  parent.append(heading);
   if (items.length === 0) {
     const empty = document.createElement("p");
     empty.className = "proof-empty";
     empty.textContent = "None";
-    instance.actions.append(empty);
+    parent.append(empty);
+    return;
   }
-  items.forEach((item, index) => {
-    const card = createCard(
-      item.action_needed || `Action item ${index + 1}`,
-      `Owner: ${item.owner_team || "Not available"}`,
-    );
-    appendProofButton(card, {
-      id: `action-${index}`,
-      quote: item.quote,
-      timestamp: item.timestamp,
-    }, instance);
-    instance.actions.append(card);
+  items.forEach(item => {
+    parent.append(createActionCard(item, needsReview, instance));
   });
+}
 
-  const reviews = data.review || [];
-  reviews.forEach((item, index) => {
-    const card = createCard(
-      item.action_needed || "Needs a person",
-      item.reason || "Review required",
+function createActionCard(item, needsReview, instance) {
+  const text = item.text || item.action_needed || "Action item";
+  const card = createCard(text, `Owner: ${item.owner_team || "Not available"}`);
+  if (needsReview) card.classList.add("proof-review-item");
+
+  const badge = document.createElement("span");
+  badge.className = `confidence-badge ${needsReview ? "needs-review" : "verified"}`;
+  const confidence = `${Math.round(item.confidence * 100)}% Confident`;
+  badge.textContent = needsReview
+    ? `${confidence} - Needs Review`
+    : item.human_approved && item.confidence < 0.7
+      ? `${confidence} - Human approved`
+      : confidence;
+  card.insertBefore(badge, card.firstChild);
+
+  const quote = typeof item.quote === "string" ? item.quote.trim() : "";
+  const timestamp = parseTimestamp(item.timestamp_sec ?? item.timestamp) ?? 0;
+  appendProofButton(card, {
+    id: `action-${item.index}`,
+    quote,
+    timestamp,
+    timestampFallback: 0,
+  }, instance);
+  const proofButton = card.querySelector(".proof-button");
+  if (quote && quote.toLowerCase() !== "none") {
+    proofButton.title = `Supporting transcript quote: ${quote}`;
+  }
+
+  if (needsReview) {
+    const controls = document.createElement("div");
+    controls.className = "proof-review-controls";
+    controls.append(
+      createReviewButton("Approve", "approve", item.index, instance),
+      createReviewButton("Dismiss", "dismiss", item.index, instance),
     );
-    appendProofButton(card, {
-      id: `review-${index}`,
-      quote: item.quote,
-      timestamp: item.timestamp,
-    }, instance);
-    instance.actions.append(card);
+    card.append(controls);
+  }
+  return card;
+}
+
+function createReviewButton(label, action, itemIndex, instance) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = label;
+  button.addEventListener("click", () => {
+    instance.setTriggerValue("action_review", {
+      action,
+      itemIndex,
+      requestId: crypto.randomUUID(),
+    });
   });
+  return button;
 }
 
 function createCard(headingText, valueText) {

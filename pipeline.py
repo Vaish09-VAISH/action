@@ -1,10 +1,7 @@
 import json, logging, re, time
 from enum import Enum
 from pathlib import Path
-<<<<<<< HEAD
 from typing import Any
-=======
->>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 
 from dotenv import load_dotenv
 
@@ -37,7 +34,6 @@ CALL_CARD_SCHEMA = {
                     "enum": ["routine", "soon", "urgent"]},
         "emergency_flag": {"type": "boolean"},
         "summary": {"type": "string"},
-<<<<<<< HEAD
         "evidence": {
             "type": "object",
             "properties": {
@@ -55,35 +51,40 @@ CALL_CARD_SCHEMA = {
             "required": ["summary", "sentiment", "urgency", "emergency"],
             "additionalProperties": False,
         },
-=======
->>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
         "action_items": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
-                    "action_needed": {"type": "string"},
+                    "text": {"type": "string"},
                     "action_required": {"type": "string"},
                     "owner_team": {"type": "string", "enum": [
                         "scheduling", "pharmacy", "billing",
                         "complaints", "nursing", "human_review"]},
                     "quote": {"type": "string"},
                     "timestamp": {"type": "string"},
+                    "timestamp_sec": {"type": "number", "minimum": 0},
+                    "confidence": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": ["verified", "needs_review"],
+                    },
                     "due_hint": {"type": "string"},
                 },
-                "required": ["action_needed", "action_required", "owner_team",
-                             "quote", "timestamp", "due_hint"],
+                "required": ["text", "action_required", "owner_team",
+                             "quote", "timestamp", "timestamp_sec",
+                             "confidence", "status", "due_hint"],
                 "additionalProperties": False,
             },
         },
     },
     "required": ["caller", "reason", "request", "call_type", "sentiment",
-<<<<<<< HEAD
                  "urgency", "emergency_flag", "summary", "evidence",
                  "action_items"],
-=======
-                 "urgency", "emergency_flag", "summary", "action_items"],
->>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
     "additionalProperties": False,
 }
 
@@ -99,7 +100,7 @@ FIELD DEFINITIONS:
 - reason: why they called, one line.
 - request: what they actually asked for. If they never asked for anything,
   the literal word "none".
-- action_needed: the patient-facing outcome - what the caller must be told
+- text: the patient-facing outcome - what the caller must be told
   or given.
 - action_required: the internal step the hospital must take to get there.
 - owner_team: the team that owns that internal step.
@@ -110,18 +111,20 @@ RULES - follow every one:
    character for character from the transcript. Do not fix grammar, do not
    paraphrase. If a sentence is split across two transcript lines, you may
    join it - the words must still be continuous as spoken.
-<<<<<<< HEAD
    Copy the matching [MM:SS] prefix into its "timestamp".
+   Also set "timestamp_sec" to that timestamp in seconds. Set "confidence"
+   to a number from 0.0 to 1.0 based on whether the quote directly supports
+   the action, and set "status" to "verified" only when confidence is at
+   least 0.7; otherwise use "needs_review". Server-side checks recalculate
+   confidence and status from quote traceability.
 2a. Add "evidence" for summary, sentiment, urgency, and emergency. Each
    entry has "quote" (an exact, short supporting quote from the transcript)
    and "timestamp" (the [MM:SS] prefix from the line containing that quote).
    If you cannot find supporting words, use quote "none" and timestamp "".
-=======
->>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 3. NEVER invent a due date. Put a date in "due_hint" ONLY if one was
    actually spoken. Otherwise use an empty string "".
 4. If the caller never asked for anything, return "action_items": [],
-   set "request" to "none", and set "action_needed" nowhere else.
+   set "request" to "none", and set "text" nowhere else.
    An empty list is a CORRECT answer. Never invent a request to fill it.
 5. Never leave a required string empty. If a field genuinely has no value,
    write the word "none" in it - not "".
@@ -264,7 +267,6 @@ def check_shape(raw: dict) -> dict:
         raise ValueError(f"missing fields: {sorted(missing)}")
     if not isinstance(raw["action_items"], list):
         raise ValueError("action_items must be a list")
-<<<<<<< HEAD
     evidence = raw.setdefault("evidence", {})
     if not isinstance(evidence, dict):
         raise ValueError("evidence must be an object")
@@ -274,18 +276,20 @@ def check_shape(raw: dict) -> dict:
             raise ValueError(f"evidence.{field} must be an object")
         item.setdefault("timestamp", "")
         item.setdefault("quote", "")
-=======
->>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
     for item in raw["action_items"]:
-        for k in ("action_needed", "action_required", "owner_team", "quote"):
+        for k in ("action_required", "owner_team"):
             if not item.get(k):
                 raise ValueError(f"action item missing '{k}': {item}")
+        item["text"] = item.get("text") or item.get("action_needed")
+        if not item["text"]:
+            raise ValueError(f"action item missing 'text': {item}")
+        item["action_needed"] = item["text"]
+        item["quote"] = item.get("quote") or ""
         item.setdefault("timestamp", "")
         item["due_hint"] = item.get("due_hint") or None      # "" -> None
     return raw
 
 
-<<<<<<< HEAD
 _TRANSCRIPT_TIMESTAMP = re.compile(r"^\[(\d{1,2}):(\d{2})\]")
 
 
@@ -326,19 +330,22 @@ def _attach_audio_timestamps(card: dict, transcript: str) -> None:
     for item in card["action_items"]:
         timestamp = _timestamp_for_quote(item["quote"], transcript)
         if timestamp is None:
-            timestamp = _timestamp_seconds(item.get("timestamp"))
-        item["timestamp"] = timestamp if timestamp is not None else 0.0
+            timestamp = _timestamp_seconds(
+                item.get("timestamp_sec", item.get("timestamp"))
+            )
+        item["timestamp_sec"] = timestamp if timestamp is not None else 0.0
+        item["timestamp"] = item["timestamp_sec"]
 
-
-=======
->>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 
 # ------------------------- 4. the quote check - catches invented words
 def verify_quote(quote: str, transcript: str) -> bool:
-    q = _normalise(quote)
-    if len(q.split()) < MIN_QUOTE_WORDS:
+    exact_quote = quote.strip()
+    if len(_normalise(exact_quote).split()) < MIN_QUOTE_WORDS:
         return False
-    return q in _normalise(transcript)
+    spoken_text = " ".join(
+        _PREFIX.sub("", line).strip() for line in transcript.splitlines()
+    )
+    return exact_quote in spoken_text
 
 
 def _is_emergency(card: dict, transcript: str) -> bool:
@@ -350,33 +357,59 @@ def _is_emergency(card: dict, transcript: str) -> bool:
 
 # ------------------------------------------------------------- 5. the gate
 def score_and_route(card: dict, transcript: str):
-    if _is_emergency(card, transcript):
-                items = card.get("action_items") or [{"action_needed": "(none)"}]
-        
-
     routed, review = [], []
+    emergency = _is_emergency(card, transcript)
+
     for item in card.get("action_items", []):
-        if len(_normalise(item.get("quote", "")).split()) < MIN_QUOTE_WORDS:
-                    review.append({"action_needed": "(none)", "verified": False,
-                       "reason": Reason.NO_REQUEST.value,
-                       "summary": card.get("summary", "")})
+        quote_is_traceable = (
+            len(_normalise(item.get("quote", "")).split()) >= MIN_QUOTE_WORDS
+            and verify_quote(item.get("quote", ""), transcript)
+        )
+        confidence = (
+            0.94 if quote_is_traceable and not emergency
+            else 0.52 if quote_is_traceable
+            else 0.35
+        )
+        item["confidence"] = confidence
+        item["status"] = "verified" if confidence >= 0.7 else "needs_review"
+        item["traceability_scored"] = True
 
-        
+        if emergency:
+            review.append({
+                **item,
+                "verified": False,
+                "reason": Reason.EMERGENCY.value,
+            })
+        elif len(_normalise(item.get("quote", "")).split()) < MIN_QUOTE_WORDS:
+            review.append({
+                **item,
+                "verified": False,
+                "reason": Reason.QUOTE_TOO_SHORT.value,
+            })
+        elif not verify_quote(item["quote"], transcript):
+            review.append({
+                **item,
+                "verified": False,
+                "reason": Reason.QUOTE_NOT_FOUND.value,
+            })
         else:
-         review.append({"action_needed": "(none)", "verified": False,
-                       "reason": Reason.NO_REQUEST.value,
-                       "summary": card.get("summary", "")})
-
+            routed.append({**item, "verified": True})
 
     if not card.get("action_items"):
-        review.append({"action": "(none)", "verified": False,
-                       "reason": Reason.NO_REQUEST.value,
-                       "summary": card.get("summary", "")})
+        review.append({
+            "action_needed": "(none)",
+            "quote": "",
+            "timestamp": 0.0,
+            "verified": False,
+            "reason": (
+                Reason.EMERGENCY.value if emergency else Reason.NO_REQUEST.value
+            ),
+            "summary": card.get("summary", ""),
+        })
     return routed, review
 
 
 # --------------------------------- 6. one function that never crashes
-<<<<<<< HEAD
 def process_transcript(transcript: str, source_name: str = "live-call") -> dict:
     transcript = transcript.strip()
     if len(transcript) < 50:
@@ -402,8 +435,6 @@ def process_transcript(transcript: str, source_name: str = "live-call") -> dict:
     return {"status": "ok", "card": card, "routed": routed, "review": review}
 
 
-=======
->>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 def process(path: str) -> dict:
     try:
         transcript = load_transcript(path)
@@ -412,24 +443,7 @@ def process(path: str) -> dict:
         FAILED.append({"file": str(path), "reason": Reason.BAD_FILE.value,
                        "detail": str(e)})
         return {"status": "skipped", "reason": Reason.BAD_FILE.value}
-<<<<<<< HEAD
     return process_transcript(transcript, Path(path).name)
-=======
-
-    try:
-        card = check_shape(call_model(transcript))
-    except Exception as e:
-        log.error("no card for %s: %s", path, e)
-        FAILED.append({"file": str(path), "reason": Reason.BAD_SHAPE.value,
-                       "detail": str(e)})
-        return {"status": "skipped", "reason": Reason.BAD_SHAPE.value}
-
-    routed, review = score_and_route(card, transcript)
-    FAILED.extend([{"file": str(path), **r} for r in review])
-    log.info("%s -> %d sent, %d to a human",
-             Path(path).name, len(routed), len(review))
-    return {"status": "ok", "card": card, "routed": routed, "review": review}
->>>>>>> 2f5ea5560da7f3e72e12aedc5f6045c558225204
 
 
 # --------------------------------------------- standalone: print the card
