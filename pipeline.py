@@ -137,6 +137,36 @@ RULES - follow every one:
 9. The summary is 2-3 sentences. No preamble like "The caller called to"."""
 
 
+STAFF_NOTES_SYSTEM_PROMPT = """You extract a cautious call summary from staff-entered notes.
+
+The input is staff notes, not a verbatim transcript. It may be incomplete,
+ambiguous, or paraphrased.
+
+RULES - follow every one:
+1. Use only facts explicitly present in the notes. Do not infer missing facts.
+2. Never present anything as a direct patient statement or verbatim quote.
+3. Never invent quotations, dates, promises, medical facts, or completed
+   actions. Distinguish a requested or proposed action from one confirmed done.
+4. If the caller, request, timing, or intended action is unclear, say so in
+   the appropriate field and do not guess.
+5. Extract an action item only when the notes explicitly state an action or
+   request. Keep its text faithful to the notes. If its owner is unclear, use
+   "human_review". If no action is stated, return an empty action_items list.
+6. Set emergency_flag true and urgency to urgent when the notes suggest a
+   potentially urgent concern. Do not treat the absence of a known phrase as
+   proof that the call is safe. Unclear or urgent issues require human review;
+   do not recommend a treatment.
+7. For every evidence field, set quote to "none" and timestamp to "".
+   Notes are not verbatim evidence and have no audio timestamps.
+8. For every action item, set quote to "none", timestamp to "",
+   timestamp_sec to 0, confidence to 0 only as a schema placeholder (not as a
+   probability), and status to "needs_review". The application removes the
+   confidence value before displaying staff-note actions.
+9. Set due_hint to "" unless a specific due date is explicitly written in
+   the notes. Keep the summary to 2-3 concise sentences and identify it as
+   based on staff-entered notes."""
+
+
 TEAM_OF = {
     "appointment":       "scheduling",
     "refill":            "pharmacy",
@@ -154,6 +184,23 @@ EMERGENCY_WORDS = (
     "trouble breathing", "heart attack", "bleeding", "stroke",
     "unconscious", "collapsed", "seizure", "suicidal", "overdose",
     "ambulance",
+)
+
+STAFF_NOTES_URGENT_PHRASES = (
+    "chest pressure", "chest tightness", "difficulty breathing",
+    "difficulty in breathing", "breathing difficulty",
+    "severe allergic reaction", "anaphylaxis", "heavy bleeding",
+    "uncontrolled bleeding", "face drooping", "slurred speech",
+    "sudden weakness", "loss of consciousness", "passed out",
+    "cannot wake", "unresponsive", "self harm", "immediate danger",
+    "immediate help", "urgent medical attention", "severe pain",
+)
+
+UNCLEAR_MARKERS = (
+    "unclear", "unknown", "not specified", "not sure",
+    "unable to determine", "need clarification", "needs clarification",
+    "pending clarification", "to be determined", "not documented",
+    "not recorded",
 )
 
 MIN_QUOTE_WORDS = 3        # shorter than this proves nothing
@@ -215,7 +262,7 @@ def _parse_loose(content: str) -> dict:
     return json.loads(text)
 
 
-def call_model(transcript: str) -> dict:
+def call_model(transcript: str, system_prompt: str = SYSTEM_PROMPT) -> dict:
     client, last = Groq(), None
     for attempt in (1, 2, 3):
         try:
@@ -230,7 +277,7 @@ def call_model(transcript: str) -> dict:
                                     "strict": True,
                                     "schema": CALL_CARD_SCHEMA},
                 },
-                messages=[{"role": "system", "content": SYSTEM_PROMPT},
+                messages=[{"role": "system", "content": system_prompt},
                           {"role": "user",   "content": transcript}],
             )
             return _parse_loose(resp.choices[0].message.content)
@@ -288,6 +335,93 @@ def check_shape(raw: dict) -> dict:
         item.setdefault("timestamp", "")
         item["due_hint"] = item.get("due_hint") or None      # "" -> None
     return raw
+
+
+def _validate_staff_notes_output(raw: Any) -> dict:
+    if not isinstance(raw, dict):
+        raise ValueError("model output must be a JSON object")
+
+    required_fields = REQUIRED | {"evidence"}
+    missing = required_fields - raw.keys()
+    if missing:
+        raise ValueError(f"missing fields: {sorted(missing)}")
+
+    string_fields = (
+        "caller", "reason", "request", "call_type", "sentiment",
+        "urgency", "summary",
+    )
+    for field in string_fields:
+        if not isinstance(raw[field], str):
+            raise ValueError(f"{field} must be a string")
+
+    if raw["call_type"] not in {
+        "appointment", "refill", "billing", "complaint",
+        "lab_results", "clinical_question", "other",
+    }:
+        raise ValueError("call_type has an unsupported value")
+    if raw["sentiment"] not in {"calm", "frustrated", "angry"}:
+        raise ValueError("sentiment has an unsupported value")
+    if raw["urgency"] not in {"routine", "soon", "urgent"}:
+        raise ValueError("urgency has an unsupported value")
+    if not isinstance(raw["emergency_flag"], bool):
+        raise ValueError("emergency_flag must be a boolean")
+    if not raw["summary"].strip():
+        raise ValueError("summary must not be empty")
+
+    evidence = raw["evidence"]
+    if not isinstance(evidence, dict):
+        raise ValueError("evidence must be an object")
+    for field in ("summary", "sentiment", "urgency", "emergency"):
+        item = evidence.get(field)
+        if not isinstance(item, dict):
+            raise ValueError(f"evidence.{field} must be an object")
+        if not isinstance(item.get("quote"), str):
+            raise ValueError(f"evidence.{field}.quote must be a string")
+        if not isinstance(item.get("timestamp"), str):
+            raise ValueError(f"evidence.{field}.timestamp must be a string")
+
+    if not isinstance(raw["action_items"], list):
+        raise ValueError("action_items must be a list")
+    action_fields = {
+        "text", "action_required", "owner_team", "quote", "timestamp",
+        "timestamp_sec", "confidence", "status", "due_hint",
+    }
+    for index, item in enumerate(raw["action_items"]):
+        if not isinstance(item, dict):
+            raise ValueError(f"action_items[{index}] must be an object")
+        missing_action_fields = action_fields - item.keys()
+        if missing_action_fields:
+            raise ValueError(
+                f"action_items[{index}] missing fields: "
+                f"{sorted(missing_action_fields)}"
+            )
+        for field in ("text", "action_required", "owner_team", "quote",
+                      "timestamp", "status", "due_hint"):
+            if not isinstance(item[field], str):
+                raise ValueError(f"action_items[{index}].{field} must be a string")
+        if item["owner_team"] not in {
+            "scheduling", "pharmacy", "billing", "complaints",
+            "nursing", "human_review",
+        }:
+            raise ValueError(f"action_items[{index}].owner_team is invalid")
+        if item["status"] not in {"verified", "needs_review"}:
+            raise ValueError(f"action_items[{index}].status is invalid")
+        timestamp = item["timestamp_sec"]
+        if (
+            not isinstance(timestamp, (int, float))
+            or isinstance(timestamp, bool)
+            or timestamp < 0
+        ):
+            raise ValueError(f"action_items[{index}].timestamp_sec is invalid")
+        confidence = item["confidence"]
+        if (
+            not isinstance(confidence, (int, float))
+            or isinstance(confidence, bool)
+            or not 0 <= confidence <= 1
+        ):
+            raise ValueError(f"action_items[{index}].confidence is invalid")
+
+    return check_shape(raw)
 
 
 _TRANSCRIPT_TIMESTAMP = re.compile(r"^\[(\d{1,2}):(\d{2})\]")
@@ -433,6 +567,126 @@ def process_transcript(transcript: str, source_name: str = "live-call") -> dict:
     log.info("%s -> %d sent, %d to a human",
              source_name, len(routed), len(review))
     return {"status": "ok", "card": card, "routed": routed, "review": review}
+
+
+def process_staff_notes(notes: str) -> dict:
+    """Process staff-entered notes without transcript quote validation/routing."""
+    if not isinstance(notes, str) or not notes.strip():
+        return {"status": "error", "reason": "Enter staff notes before processing."}
+
+    notes = notes.strip()
+    try:
+        model_output = call_model(notes, STAFF_NOTES_SYSTEM_PROMPT)
+        card = _validate_staff_notes_output(model_output)
+    except Exception as error:
+        log.error("could not process staff-entered notes: %s", error)
+        FAILED.append({
+            "file": "Staff-entered notes",
+            "reason": Reason.BAD_SHAPE.value,
+            "detail": str(error),
+        })
+        return {
+            "status": "error",
+            "reason": f"Staff notes could not be processed: {error}",
+        }
+
+    for field in ("summary", "sentiment", "urgency", "emergency"):
+        card["evidence"][field]["quote"] = "none"
+        card["evidence"][field]["timestamp"] = ""
+
+    normalized_notes = _normalise(notes)
+    urgent = (
+        _is_emergency(card, notes)
+        or card.get("urgency") == "urgent"
+        or any(
+            phrase in normalized_notes
+            for phrase in STAFF_NOTES_URGENT_PHRASES
+        )
+    )
+
+    def is_unclear(value: Any) -> bool:
+        normalized = _normalise(str(value or ""))
+        return not normalized or normalized in {"none", "n a", "na"} or any(
+            marker in normalized for marker in UNCLEAR_MARKERS
+        )
+
+    unclear_fields = []
+    if is_unclear(card.get("caller")):
+        unclear_fields.append("caller")
+    if is_unclear(card.get("request")):
+        unclear_fields.append("request")
+    if any(marker in normalized_notes for marker in UNCLEAR_MARKERS):
+        unclear_fields.append("notes contain an explicit uncertainty")
+
+    review = []
+    for item in card["action_items"]:
+        item["quote"] = "none"
+        item["timestamp"] = ""
+        item["timestamp_sec"] = 0.0
+        item["confidence"] = None
+        item["confidence_available"] = False
+        item["status"] = "needs_review"
+        item["traceability_scored"] = True
+        item["verified"] = False
+        owner = _normalise(item.get("owner_team", ""))
+        next_step = item.get("action_required", "")
+        if owner in {"", "none", "unknown", "human review"}:
+            unclear_fields.append("action owner")
+        if is_unclear(next_step) or is_unclear(item.get("text")):
+            unclear_fields.append("next step")
+        review.append(item.copy())
+
+    if not card["action_items"]:
+        unclear_fields.append("next step")
+
+    if urgent:
+        review_reason = Reason.EMERGENCY.value
+    elif unclear_fields:
+        review_reason = (
+            "Human review required because these notes are unclear or incomplete: "
+            + ", ".join(dict.fromkeys(unclear_fields))
+            + "."
+        )
+    else:
+        review_reason = (
+            "Staff-entered notes are not verbatim evidence; human review required."
+        )
+
+    for item in review:
+        item["reason"] = review_reason
+
+    if urgent or unclear_fields:
+        if urgent:
+            review_reason = (
+                "Potentially urgent healthcare concern: "
+                "immediate human review required. " + Reason.EMERGENCY.value
+            )
+        review.append({
+            "action_needed": "(none)",
+            "text": "(none)",
+            "quote": "none",
+            "timestamp": "",
+            "timestamp_sec": 0.0,
+            "confidence": None,
+            "confidence_available": False,
+            "status": "needs_review",
+            "verified": False,
+            "reason": review_reason,
+            "summary": card["summary"],
+        })
+
+    log.info("Staff-entered notes -> 0 routed, %d to human review", len(review))
+    return {
+        "status": "ok",
+        "source": "Staff-entered notes",
+        "card": card,
+        "routed": [],
+        "review": review,
+        "needs_human_review": True,
+        "review_reason": review_reason,
+        "potentially_urgent": urgent,
+        "unclear_fields": list(dict.fromkeys(unclear_fields)),
+    }
 
 
 def process(path: str) -> dict:
