@@ -1,0 +1,7 @@
+caller: unknown
+reason: a complaint of paid twice for the same visit
+request: to arrange a compensation
+urgency: very much
+action needed: check and provide compensation
+action required: notify the billing department as a complaint
+mood: angry tone

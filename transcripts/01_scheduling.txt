@@ -1,0 +1,19 @@
+[00:00] AGENT: Hello. Ma'am, please tell me that we are from Manipal Hospital. Hello, ma'am. This is Barkivi.
+[00:05] AGENT: Day after tomorrow, I have booked an appointment. Can you postpone the appointment and book any alternative appointment?
+[00:11] PATIENT: Yes, ma'am.
+[00:13] PATIENT: We can. Can you tell me your name and from which compartment
+[00:18] AGENT: are you from? Ma'am, this is Bahargivi from
+[00:21] AGENT: Orthopedic
+[00:23] AGENT: compartment.
+[00:24] AGENT: Okay, ma'am. When did you have the previous slot?
+[00:27] AGENT: It was the
+[00:30] AGENT: previous Tuesday.
+[00:32] AGENT: Sorry, ma'am? Previous Tuesday.
+[00:36] PATIENT: Ma'am, I want the appointment,
+[00:39] PATIENT: the one which you had booked earlier in advance. That's
+[00:43] PATIENT: day after tomorrow. Okay. You mean, it's, on seventh? Yes.
+[00:48] PATIENT: Ma'am, one minute. I'll check through it.
+[00:54] PATIENT: Ma'am, can you have the appointment on eleventh
+[00:56] PATIENT: or on thirteenth as the doctor is available on that time?
+[01:00] AGENT: I am not sure about eleventh. I'm okay with thirteenth. Shall I book it, ma'am? Yeah. Sure.
+[01:06] AGENT: Okay, ma'am. Thank you.
