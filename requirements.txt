@@ -1,0 +1,6 @@
+streamlit==1.65.0
+streamlit-mic-recorder==0.0.8
+groq==1.7.0
+deepgram-sdk==7.13.0
+python-dotenv==1.2.4
+starlette==1.7.0

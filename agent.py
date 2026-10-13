@@ -1,24 +1,70 @@
-import os
 import json
+from datetime import datetime, timezone
 from pathlib import Path
-from dotenv import load_dotenv
 from groq import Groq
-
-
-# Load .env
-env_path = Path(__file__).resolve().with_name(".env")
-
-if not env_path.is_file():
-    raise FileNotFoundError(f".env not found at {env_path}")
-
-load_dotenv(dotenv_path=env_path, override=True)
+from settings import get_secret
 
 
 MODEL = "openai/gpt-oss-120b"
 
-client = Groq(
-    api_key=os.environ["GROQ_API_KEY"]
+DEPARTMENTS = (
+    "billing",
+    "complaints",
+    "medical_records",
+    "nursing",
+    "pharmacy",
+    "scheduling",
 )
+
+
+def create_department_message(
+    transcript_file: str,
+    department: str,
+    action_item: str,
+) -> dict:
+    if department not in DEPARTMENTS:
+        raise ValueError(f"Unsupported department: {department}")
+    if not transcript_file.strip() or not action_item.strip():
+        raise ValueError("Transcript filename and action item are required.")
+    return {
+        "transcript_file": transcript_file,
+        "department": department,
+        "action_item": action_item,
+        "status": "Sent",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def render_department_queue(messages: list[dict]) -> None:
+    import streamlit as st
+
+    with st.expander("Department Queues"):
+        st.caption(
+            "Local in-app queue only; messages are not sent to external systems."
+        )
+        department = st.selectbox(
+            "View department queue",
+            DEPARTMENTS,
+            key="department_queue_filter",
+        )
+        department_messages = [
+            message for message in messages
+            if message.get("department") == department
+        ]
+        if not department_messages:
+            st.info(f"No messages in the {department.replace('_', ' ')} queue.")
+            return
+
+        for message in reversed(department_messages):
+            with st.container(border=True):
+                st.markdown(f"**Task:** {message['action_item']}")
+                st.caption(f"Source: {message['transcript_file']}")
+                st.write(f"Status: {message['status']}")
+                st.caption(f"Added: {message['timestamp']}")
+
+
+def _create_client() -> Groq:
+    return Groq(api_key=get_secret("GROQ_API_KEY"))
 
 
 # --------------------------------------------------
@@ -99,6 +145,7 @@ def extract(ai_response):
 def summarize(transcript):
 
     last_error = None
+    client = _create_client()
 
     for attempt in range(3):
 

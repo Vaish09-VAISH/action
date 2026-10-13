@@ -8,15 +8,8 @@ so re-running never costs another cent.
 
 import sys
 from pathlib import Path
-from dotenv import load_dotenv
-
-# ---- keys --------------------------------------------------------------
-env_path = Path(__file__).resolve().with_name(".env")
-if not env_path.is_file():
-    raise SystemExit(f".env not found at {env_path}")
-load_dotenv(dotenv_path=env_path, override=True)
-
 from deepgram import DeepgramClient
+from settings import get_secret
 
 # ---- flip these two if the speakers come out backwards -----------------
 SPEAKER_NAMES = {0: "AGENT", 1: "PATIENT"}
@@ -57,7 +50,7 @@ def transcribe_bytes(audio_bytes, content_type):
     if not audio_bytes:
         raise ValueError("The live recording contains no audio.")
 
-    dg = DeepgramClient()
+    dg = DeepgramClient(api_key=get_secret("DEEPGRAM_API_KEY"))
     response = dg.listen.v1.media.transcribe_file(
         request=audio_bytes,
         model="nova-3",
@@ -81,7 +74,7 @@ def transcribe(audio_path):
         return out
 
     print(f"  sending {audio_path.name} ({audio_path.stat().st_size/1e6:.1f} MB) to Deepgram ...")
-    dg = DeepgramClient()                      # reads DEEPGRAM_API_KEY from .env
+    dg = DeepgramClient(api_key=get_secret("DEEPGRAM_API_KEY"))
     with open(audio_path, "rb") as fh:
         resp = dg.listen.v1.media.transcribe_file(
             request=fh.read(),

@@ -3,14 +3,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
-
-env_path = Path(__file__).resolve().with_name(".env")
-if not env_path.is_file():
-    raise SystemExit(f".env not found at {env_path}")
-load_dotenv(dotenv_path=env_path, override=True)
-
 from groq import Groq, APIStatusError, APIConnectionError, APITimeoutError
+from settings import get_secret
 
 # ----------------------------------------------------------------- config
 MODEL = "openai/gpt-oss-120b"    # better quality
@@ -60,7 +54,8 @@ CALL_CARD_SCHEMA = {
                     "action_required": {"type": "string"},
                     "owner_team": {"type": "string", "enum": [
                         "scheduling", "pharmacy", "billing",
-                        "complaints", "nursing", "human_review"]},
+                        "complaints", "medical_records", "nursing",
+                        "human_review"]},
                     "quote": {"type": "string"},
                     "timestamp": {"type": "string"},
                     "timestamp_sec": {"type": "number", "minimum": 0},
@@ -263,7 +258,7 @@ def _parse_loose(content: str) -> dict:
 
 
 def call_model(transcript: str, system_prompt: str = SYSTEM_PROMPT) -> dict:
-    client, last = Groq(), None
+    client, last = Groq(api_key=get_secret("GROQ_API_KEY")), None
     for attempt in (1, 2, 3):
         try:
             resp = client.chat.completions.create(
@@ -401,7 +396,7 @@ def _validate_staff_notes_output(raw: Any) -> dict:
                 raise ValueError(f"action_items[{index}].{field} must be a string")
         if item["owner_team"] not in {
             "scheduling", "pharmacy", "billing", "complaints",
-            "nursing", "human_review",
+            "medical_records", "nursing", "human_review",
         }:
             raise ValueError(f"action_items[{index}].owner_team is invalid")
         if item["status"] not in {"verified", "needs_review"}:
