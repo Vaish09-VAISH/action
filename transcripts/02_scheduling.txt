@@ -1,0 +1,13 @@
+[00:00] AGENT: Good morning, ma'am. How can I help you? We are from Manipal Hospital.
+[00:03] PATIENT: Hello. Ma'am, the bill which you gave is... I'm not clear about it. Can I get the itemized copy of that? Yes, ma'am. Ma'am, can I know from which department are you calling? Like, what you have?
+[00:15] PATIENT: I'm an orthopedic patient.
+[00:18] AGENT: Yes, ma'am. Ma'am, you mean you're asking for a itemized copy of a bill? Yes. Exactly, ma'am. Once again, ma'am. Can you hold on?
+[00:26] AGENT: Ma'am, can you give your details like your name?
+[00:29] PATIENT: Myself, Bhargavi.
+[00:31] AGENT: One second, ma'am. Your full name, ma'am? Bhargavi ji.
+[00:36] AGENT: Yes, ma'am. When did you have the last slot? Can you mention the date and time of it? It was the day before yesterday
+[00:43] AGENT: at 10AM.
+[00:44] AGENT: Yes, ma'am. On October 8 at 10AM. Ma'am, can you mention your phone number, please? So that I can give it.
+[00:51] PATIENT: (636)
+[00:52] PATIENT: 485-6800.
+[00:56] AGENT: Yes, ma'am. Thank you for your information. Ma'am, we will send the itemized bill as you have asked into this phone number. Contact me if you need anything else. Yes, ma'am. Thank you. Thank you, ma'am.
