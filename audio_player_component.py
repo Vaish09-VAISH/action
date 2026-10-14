@@ -1,8 +1,5 @@
 """Audio player component that can seek to evidence timestamps."""
 
-import base64
-from pathlib import Path
-
 import streamlit as st
 
 _PLAYER_HTML = """
@@ -166,12 +163,3 @@ AUDIO_PLAYER_COMPONENT = st.components.v2.component(
     css=_PLAYER_CSS,
     js=_PLAYER_JS,
 )
-
-
-@st.cache_data(show_spinner=False)
-def audio_file_data_uri(audio_path: str) -> str:
-    path = Path(audio_path)
-    if path.suffix.lower() != ".mp3" or not path.is_file():
-        raise FileNotFoundError(f"MP3 audio file not found: {path}")
-    encoded_audio = base64.b64encode(path.read_bytes()).decode("ascii")
-    return f"data:audio/mpeg;base64,{encoded_audio}"
