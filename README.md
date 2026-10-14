@@ -41,7 +41,8 @@ streamlit run asgi_app.py
    samples, and the application source.
 2. In Streamlit Community Cloud, create an app from the repository and select
    the deployment branch and `asgi_app.py` as the **Main file path**. The ASGI
-   wrapper is required for the live recorder and audio-serving routes.
+   wrapper is required for the live recorder routes. Bundled sample MP3 audio
+   is embedded in the player so playback does not depend on custom audio routes.
 3. In **Advanced settings**, select Python 3.12 and add the following to
    **Secrets**, replacing the placeholders with your own keys:
 
