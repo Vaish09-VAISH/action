@@ -6,7 +6,7 @@ from urllib.parse import quote
 import streamlit as st
 
 from audio_evidence_component import AUDIO_EVIDENCE_COMPONENT
-from audio_player_component import AUDIO_PLAYER_COMPONENT
+from audio_player_component import AUDIO_PLAYER_COMPONENT, audio_file_data_uri
 from live_recorder_component import LIVE_STREAM_COMPONENT
 
 st.set_page_config(
@@ -357,7 +357,7 @@ if active_source == "live" and st.session_state.get("live_audio_url"):
     audio_url = st.session_state["live_audio_url"]
     audio_label = "Live call"
 else:
-    audio_url = f"/api/audio/{quote(selected_audio.name, safe='')}"
+    audio_url = audio_file_data_uri(str(selected_audio))
     audio_label = selected_audio.name
 
 st.caption(f"Audio proof: {audio_label}")
