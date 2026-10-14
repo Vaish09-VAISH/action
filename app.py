@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import logging
 from pathlib import Path
@@ -6,7 +7,7 @@ from urllib.parse import quote
 import streamlit as st
 
 from audio_evidence_component import AUDIO_EVIDENCE_COMPONENT
-from audio_player_component import AUDIO_PLAYER_COMPONENT, audio_file_data_uri
+from audio_player_component import AUDIO_PLAYER_COMPONENT
 from live_recorder_component import LIVE_STREAM_COMPONENT
 
 st.set_page_config(
@@ -357,7 +358,8 @@ if active_source == "live" and st.session_state.get("live_audio_url"):
     audio_url = st.session_state["live_audio_url"]
     audio_label = "Live call"
 else:
-    audio_url = audio_file_data_uri(str(selected_audio))
+    encoded_audio = base64.b64encode(selected_audio.read_bytes()).decode("ascii")
+    audio_url = f"data:audio/mpeg;base64,{encoded_audio}"
     audio_label = selected_audio.name
 
 st.caption(f"Audio proof: {audio_label}")
